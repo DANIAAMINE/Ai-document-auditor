@@ -3,19 +3,15 @@ import streamlit as st
 
 # 1. Title and Header
 st.title("🚚 AI Freight & Document Auditor")
-st.write(
-    "Upload a Rate Confirmation, Bill of Lading, or Invoice to audit"
-    " instantly!"
-)
+st.write("Upload a Rate Confirmation, Bill of Lading, or Invoice to audit instantly!")
 
 # 2. Drag and Drop File Uploader
-uploaded_file = st.file_uploader(
-    "Drop your PDF here", type=["pdf", "png", "jpg", "txt"]
-)
+uploaded_file = st.file_uploader("Drop your PDF here", type=["pdf", "png", "jpg", "txt"])
 
 # 3. Read the ACTUAL contents of the uploaded PDF
 if uploaded_file is not None:
     st.success(f"✅ Received file: {uploaded_file.name}")
+    
     text = ""
     try:
         if uploaded_file.name.lower().endswith(".pdf"):
@@ -33,8 +29,9 @@ if uploaded_file is not None:
 
     # 4. Smart Document Identification & Audit Rules
     st.subheader("🤖 AI Extraction & Audit Report")
+    
     text_upper = text.upper()
-
+    
     # Identify Document Type dynamically
     if "INVOICE" in text_upper:
         doc_type = "Carrier Invoice"
@@ -47,9 +44,7 @@ if uploaded_file is not None:
 
     # Smart Audit Flag detection
     if "UNAPPROVED" in text_upper:
-        audit_flag = (
-            "⚠️ WARNING: Unapproved fee or rate discrepancy detected in invoice!"
-        )
+        audit_flag = "⚠️ WARNING: Unapproved fee or rate discrepancy detected in invoice!"
     elif "DETENTION" in text_upper:
         audit_flag = "ℹ️ Detention clause detected in document."
     else:
@@ -59,6 +54,7 @@ if uploaded_file is not None:
     extracted_data = {
         "file_name": uploaded_file.name,
         "document_type": doc_type,
-        "audit_status": audit_flag,
+        "audit_status": audit_flag
     }
+
     st.json(extracted_data)
