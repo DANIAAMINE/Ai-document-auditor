@@ -1,66 +1,64 @@
-import pypdf[cite: 4]
-import streamlit as st[cite: 4]
+import pypdf
+import streamlit as st
 
-# 1. Title and Header[cite: 4]
-st.title("🚚 AI Freight & Document Auditor")[cite: 4]
-st.write([cite: 4]
-    "Upload a Rate Confirmation, Bill of Lading, or Invoice to audit"[cite: 4]
-    " instantly!"[cite: 4]
-)[cite: 4]
+# 1. Title and Header
+st.title("🚚 AI Freight & Document Auditor")
+st.write(
+    "Upload a Rate Confirmation, Bill of Lading, or Invoice to audit"
+    " instantly!"
+)
 
-# 2. Drag and Drop File Uploader[cite: 4]
-uploaded_file = st.file_uploader([cite: 4]
-    "Drop your PDF here",[cite: 4]
-    type=["pdf", "png", "jpg", "txt"][cite: 4]
-)[cite: 4]
+# 2. Drag and Drop File Uploader
+uploaded_file = st.file_uploader(
+    "Drop your PDF here", type=["pdf", "png", "jpg", "txt"]
+)
 
-# 3. Read the ACTUAL contents of the uploaded PDF[cite: 4]
-if uploaded_file is not None:[cite: 4]
-    st.success(f"✅ Received file: {uploaded_file.name}")[cite: 4]
+# 3. Read the ACTUAL contents of the uploaded PDF
+if uploaded_file is not None:
+    st.success(f"✅ Received file: {uploaded_file.name}")
+    text = ""
+    try:
+        if uploaded_file.name.lower().endswith(".pdf"):
+            reader = pypdf.PdfReader(uploaded_file)
+            for page in reader.pages:
+                text += page.extract_text() or ""
+        else:
+            text = uploaded_file.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        st.error(f"Error reading file: {e}")
 
-    # Extract raw text from the[cite: 4]
-    text = ""[cite: 3]
-    if uploaded_file.name.lower().endswith(".pdf"):[cite: 3]
-        reader = pypdf.PdfReader(uploaded_file)[cite: 3]
-        for page in reader.pages:[cite: 3]
-            text += page.extract_text() or ""[cite: 3]
-    else:[cite: 3]
-        text = uploaded_file.read().decode("utf-8", errors="ignore")[cite: 3]
+    # Preview extracted text
+    with st.expander("📄 Click to view extracted raw text from your file"):
+        st.write(text if text else "No readable text found.")
 
-    # Preview extracted text[cite: 3]
-    with st.expander("📄 Click to view extracted raw text from your file"):[cite: 3]
-        st.write(text if text else "No readable text found.")[cite: 3]
+    # 4. Smart Document Identification & Audit Rules
+    st.subheader("🤖 AI Extraction & Audit Report")
+    text_upper = text.upper()
 
-    # 4. Smart Document Identification & Audit Rules[cite: 3]
-    st.subheader("🤖 AI Extraction & Audit Report")[cite: 3]
+    # Identify Document Type dynamically
+    if "INVOICE" in text_upper:
+        doc_type = "Carrier Invoice"
+    elif "BILL OF LADING" in text_upper or "BOL" in text_upper:
+        doc_type = "Bill of Lading (BOL)"
+    elif "RATE CONFIRMATION" in text_upper or "RATE CON" in text_upper:
+        doc_type = "Rate Confirmation"
+    else:
+        doc_type = "Logistics Document"
 
-    text_upper = text.upper()[cite: 3]
+    # Smart Audit Flag detection
+    if "UNAPPROVED" in text_upper:
+        audit_flag = (
+            "⚠️ WARNING: Unapproved fee or rate discrepancy detected in invoice!"
+        )
+    elif "DETENTION" in text_upper:
+        audit_flag = "ℹ️ Detention clause detected in document."
+    else:
+        audit_flag = "✅ Document scanned. No billing discrepancies flagged."
 
-    # Identify Document Type dynamically from actual PDF text[cite: 3]
-    if "INVOICE" in text_upper:[cite: 3]
-        doc_type = "Carrier Invoice"[cite: 2]
-    elif "BILL OF LADING" in text_upper or "BOL" in text_upper:[cite: 2]
-        doc_type = "Bill of Lading (BOL)"[cite: 2]
-    elif "RATE CONFIRMATION" in text_upper or "RATE CON" in text_upper:[cite: 2]
-        doc_type = "Rate Confirmation"[cite: 2]
-    else:[cite: 2]
-        doc_type = "Logistics Document"[cite: 2]
-
-    # Smart Audit Flag detection[cite: 2]
-    if "UNAPPROVED" in text_upper:[cite: 2]
-        audit_flag = ([cite: 2]
-            "⚠️ WARNING: Unapproved fee or rate discrepancy detected in invoice!"[cite: 2]
-        )[cite: 2]
-    elif "DETENTION" in text_upper:[cite: 2]
-        audit_flag = "ℹ️ Detention clause detected in document."[cite: 2]
-    else:[cite: 2]
-        audit_flag = "✅ Document scanned. No billing discrepancies flagged."[cite: 1, 2]
-
-    # Display the dynamic results[cite: 1]
-    extracted_data = {[cite: 1]
-        "file_name": uploaded_file.name,[cite: 1]
-        "document_type": doc_type,[cite: 1]
-        "audit_status": audit_flag,[cite: 1]
-    }[cite: 1]
-
-    st.json(extracted_data)[cite: 1]
+    # Display the dynamic results
+    extracted_data = {
+        "file_name": uploaded_file.name,
+        "document_type": doc_type,
+        "audit_status": audit_flag,
+    }
+    st.json(extracted_data)
